@@ -1,0 +1,179 @@
+---
+title: "Trajectories of a binary varible"
+author: "Thomas Mumuni Bilintoh"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{binaryTimeSeries}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# binaryTimeSeries
+
+## This tutorial illustrates the concepts of the trajectories of a binary variable using an example data.
+
+```{r setup,include = FALSE,warning=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  fig.width=8.5, 
+  fig.height=6,
+  comment = "#>"
+)
+# Make sure you load all the libraries below before you start using the package.
+library(binaryTimeSeries)
+library(ggnewscale)
+library(reshape2)
+library(raster)
+library(terra)
+library(dplyr)
+library(maptools) 
+```
+
+## Data
+The example data is a time series of five binary maps at five time points: 2000, 2001, 2002, 2003, and 2005.
+The tutorial analyzes the trajectory of variable 1, which in this instance indicates presence, whiles 0 represents absence.
+
+The time series maps are available in GeoTIFF and CSV formats and included in the package. 
+The first step is to load the raster files.
+
+```{r, eval=TRUE, warning=FALSE}
+# Read the raster files from "externa"l folder as terra raster format.
+rasstackY <- terra::rast(system.file("external/Example_raster_Y.tif",package="binaryTimeSeries"))
+
+#NB: The package comes with "Example_Data_Y.tif", "Example_Data_Y.cvs", "Example_raster_X.tif", and "Example_Data_X.cvs."
+
+# Set the spatial resolution of the data. 
+datares <- c( 1000, 1000)
+
+# Set the crs of the data.
+datprj <-"+proj=utm +zone=32 +datum=WGS84 +ellps=GRS80  +units=m +no_defs"
+
+```
+
+## Calling the `changeData` function
+
+Next, use the **changeData** function to create a list containing the raster 
+data sets concerning the number of times the category of interest is present and 
+the number of times the category of interest changes during the time series.
+Output from the **changeData** function serves as input data for the 
+**presencePlot** function. Type "?changeData" in your R console to see the help file.
+```{r, eval=TRUE, warning=FALSE}
+# Create input data for the presencePlot function and assign the results to a variable, e.g., "a."
+a <- changeData (rasstackY,
+                 nodata = 2,
+                 category = 1,
+                 spres = datares,
+                 datacrs = datprj)
+a
+```
+
+## Calling the `presencePlot` function
+
+Use the **presencePlot** function to create the number of presences and change maps. 
+Type "?presencePlot" in your R console to see the help file.
+```{r, eval=TRUE, warning=FALSE}
+presencePlot (input = a,
+              pltunit = "m",
+              dataEpsg = 32632,
+              scalePos = "bottomleft",
+              narrowPos = "topright",
+              narrowSize = 1,
+              categoryName = "marsh",
+              xAxis = "Longitude (m)",
+              yAxis = "Latitude (m)",
+              axisText = 1.2,
+              axisLabel = 1.2,
+              plotTitle = 1)
+              
+```
+
+## Calling the `trajData` function
+
+The **trajData** function creates the data that serves as input for the **trajPlot** function.
+Type "?trajData" in your R console to see the help file.
+```{r, eval=TRUE, warning=FALSE}
+# Create input data for the trajPlot function and assign the results to a variable, e.g., "b."
+b <- trajData(x = rasstackY,
+             nodata = 2,
+             category = 1,
+             spres = datares,
+             datacrs = datprj,
+             unified = "yes")# if "no", the analysis considers the entire study region.
+
+b
+```
+
+## Calling the `trajPlot` function
+
+The **trajPlot** function creates a map and pie chart of the trajectories of the category of interest.
+Type "?trajPlot" in your R console to see the help file.
+```{r, eval=TRUE, warning=FALSE, echo=FALSE}
+trajPlot(input = b,
+         pltunit = "m",
+         dataEpsg = 32632,
+         categoryName = "marsh's",
+         scalePos = "bottomleft",
+         narrowPos = "topright",
+         narrowSize = 1,
+         xAxis = "Longitude (m)",
+         yAxis = "Latitude (m)",
+         axisText = 1.2,
+         axisLabel = 1.4,
+         plotTitle = 1.5,
+         legendTex = 0.9)
+
+```
+
+## Calling the `dataStack` function
+
+The **dataStack** function create the data which serves as input for the "stackbarPlots" function.
+Type "?dataStack" in your R console to see the help file.
+```{r, eval=TRUE, warning=FALSE}
+# Create a vector variable containing the time points
+timepoints <- c(2000,2001,2002,2003,2005)
+
+# Use the dataStack function to create input for the stackbarPlots function.
+c <- dataStack(x = rasstackY,
+               category = 1,
+               nodata = 2,
+               unified = "yes",
+               timePoints = timepoints,
+               categoryName = "marsh",
+               regionName = "extent")
+c
+```
+
+## Calling the `stackbarPlots` function
+
+The **stackbarPlots** function creates stacked bar plots showing the sizes of a 
+category's trajectory during each time interval and the three Change 
+Components. Type "?stackbarPlots" in your R console to see the help file.
+```{r, eval=TRUE, warning=FALSE, echo=FALSE}
+# Create the stacked bars 
+stackbarPlots(input = c,
+              axisSize = 10,
+              lbAxSize = 12,
+              lgSize = 12,
+              titleSize = 12,
+              datbreaks = "no",
+              upperlym = 60,
+              lowerlym = - 50,
+              lymby = 5,
+              upperlym2 = 35,
+              lymby2 = 5,
+              xAngle = 0)
+
+```
+
+## References
+Pontius Jr, R. G. (2022). Metrics That Make a Difference: How to Analyze Change and Error. Springer Nature Switzerland AG.
+
+Bilintoh, T.M., (2022). Intensity Analysis to Study the Dynamics of reforestation in the Rio Doce Water Basin, Brazil. Frontiers in Remote Sensing,  3 (873341), 13. 
+
+Pontius Jr, R. G. (2019). Component Intensities to relate difference by category with difference overall.International Journal of Applied Earth Observation and Geoinformation, 77: 94-99. 
+
+Pontius Jr, R. G., Krithivasan, R., Sauls, L., Yan, Y., & Zhang, Y. (2017). Methods to summarize change among land
+categories across time intervals. Journal of Land Use Science, 12(4), 218–230. 
+
+Pontius Jr, R. G., & Santacruz, A. (2014). Quantity, exchange, and shift components of difference in a square contingency table. International Journal of Remote Sensing, 35(21), 7543–7554. 
